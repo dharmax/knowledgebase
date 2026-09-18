@@ -1,0 +1,26 @@
+{
+  "id": "skills/get-weather",
+  "name": "get-weather",
+  "title": "Real-Time Terminal Weather Forecast",
+  "description": "Fetches current weather conditions and forecast for any city, country, or local IP location using wttr.in with clean ANSI styling.",
+  "target": "universal",
+  "tags": ["weather", "forecast", "climate", "temperature", "meteorology", "wttr", "rain", "sun"],
+  "safeToAutomate": true,
+  "requirements": {
+    "daemons": [],
+    "binaries": ["curl"]
+  },
+  "inputs": {
+    "location": {
+      "type": "string",
+      "default": "",
+      "description": "City or location name (e.g. 'London', 'Paris', 'Tokyo'). Defaults to local IP location."
+    },
+    "format": {
+      "type": "string",
+      "default": "compact",
+      "description": "Weather format: 'compact' (one-line summary) or 'full' (forecast grid)"
+    }
+  },
+  "entrypoint": "run.ts"
+}

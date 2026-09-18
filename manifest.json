@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-09-18T18:29:53.857Z",
+  "generatedAt": "2026-09-18T18:45:33.549Z",
   "repo": "dharmax/knowledgebase",
-  "totalItems": 11,
+  "totalItems": 12,
   "items": [
     {
       "id": "patterns/pubsub-event-routing",
@@ -149,6 +149,39 @@
       },
       "sha256": "b73a3c05aee0d7bc58e5f411a9c7d2f2749f6fbf979f091c263d0536c3cd10ba",
       "sizeBytes": 5705
+    },
+    {
+      "id": "skills/get-weather",
+      "type": "skill",
+      "title": "Real-Time Terminal Weather Forecast",
+      "description": "Fetches current weather conditions and forecast for any city, country, or local IP location using wttr.in with clean ANSI styling.",
+      "target": "universal",
+      "tags": [
+        "weather",
+        "forecast",
+        "climate",
+        "temperature",
+        "meteorology",
+        "wttr",
+        "rain",
+        "sun"
+      ],
+      "path": "skills/get-weather",
+      "entrypoint": "run.ts",
+      "files": [
+        "skill.test.ts",
+        "run.ts",
+        "skill.json"
+      ],
+      "sourceCode": "export interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport default async function run(ctx: OSContext) {\n  const { sh, log, args } = ctx\n\n  let location = ''\n  if (typeof args === 'string') {\n    const clean = args\n      .replace(/^(what('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for)?|how('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for)?|weather(\\s+in|\\s+for)?|get\\s+weather(\\s+in|\\s+for)?|acquire\\s+the\\s+weather\\s+skill)\\s*/i, '')\n      .replace(/[?!.]+$/, '')\n      .trim()\n    location = clean\n  } else if (args && typeof args === 'object') {\n    location = args.location || args.city || args.input || ''\n  }\n\n  const locParam = location ? encodeURIComponent(location) : ''\n  log(`🌤️ Fetching weather report${location ? ` for \"${location}\"` : ' for current location'}...`)\n\n  // Try wttr.in format 3 for clean terminal summary\n  const res = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?format=%l:+%c+%t+(humidity:+%h,+wind:+%w)\"`)\n  if (res.exitCode === 0 && res.stdout.trim() && !res.stdout.includes('<!DOCTYPE')) {\n    const output = res.stdout.trim()\n    log(`\\x1b[1;36m${output}\\x1b[0m`)\n    return { success: true, location: location || 'auto', weather: output }\n  }\n\n  // Fallback to 1-day compact summary\n  const fallback = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?0\"`)\n  if (fallback.exitCode === 0 && fallback.stdout.trim()) {\n    console.log('\\n' + fallback.stdout)\n    return { success: true, location: location || 'auto', weather: fallback.stdout }\n  }\n\n  throw new Error('Weather service unavailable or network timeout.')\n}\n",
+      "requirements": {
+        "daemons": [],
+        "binaries": [
+          "curl"
+        ]
+      },
+      "sha256": "93eb6efaba429334ffb87bff2f30096edda893b91bb24b692385f61e901c4078",
+      "sizeBytes": 3882
     },
     {
       "id": "skills/git-squash-feature",
