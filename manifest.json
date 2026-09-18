@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-09-18T17:24:45.364Z",
+  "generatedAt": "2026-09-18T18:04:07.932Z",
   "repo": "dharmax/knowledgebase",
-  "totalItems": 9,
+  "totalItems": 10,
   "items": [
     {
       "id": "patterns/pubsub-event-routing",
@@ -116,6 +116,24 @@
       "path": "skills/bun-test-matrix.json",
       "sha256": "b695d1f142f3c48dfc632bc39470e5688301b1dc45be6dbeaf6344313b854f55",
       "sizeBytes": 813
+    },
+    {
+      "id": "skills/generate-image-sd",
+      "type": "skill",
+      "title": "Local Stable Diffusion Image Generation",
+      "description": "Generate high-resolution AI images via local Stable Diffusion WebUI API (SDXL on lotus:7860).",
+      "target": "universal",
+      "tags": [
+        "image",
+        "generation",
+        "sdxl",
+        "stable-diffusion",
+        "ai",
+        "media"
+      ],
+      "path": "skills/generate-image-sd.json",
+      "sha256": "60a3b69972bfa523c243be90207c4c8244132975c0fb7e62b9fe492dc71c73f1",
+      "sizeBytes": 2016
     },
     {
       "id": "skills/git-squash-feature",
