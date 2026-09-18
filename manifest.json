@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-09-18T20:16:48.783Z",
+  "generatedAt": "2026-09-18T20:21:55.302Z",
   "repo": "dharmax/knowledgebase",
   "totalItems": 12,
   "items": [
@@ -147,6 +147,38 @@
         ],
         "binaries": []
       },
+      "inputs": {
+        "prompt": {
+          "type": "string",
+          "description": "Visual text description of the image to generate",
+          "required": true
+        },
+        "output": {
+          "type": "string",
+          "default": "output.png",
+          "description": "Destination file path for the generated image"
+        },
+        "host": {
+          "type": "string",
+          "default": "http://lotus:7860",
+          "description": "Stable Diffusion WebUI API host"
+        },
+        "width": {
+          "type": "number",
+          "default": 1024,
+          "description": "Image width in pixels"
+        },
+        "height": {
+          "type": "number",
+          "default": 1024,
+          "description": "Image height in pixels"
+        },
+        "steps": {
+          "type": "number",
+          "default": 25,
+          "description": "Sampling steps"
+        }
+      },
       "sha256": "b73a3c05aee0d7bc58e5f411a9c7d2f2749f6fbf979f091c263d0536c3cd10ba",
       "sizeBytes": 5705
     },
@@ -174,15 +206,33 @@
         "run.ts",
         "skill.json"
       ],
-      "sourceCode": "export interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport function cleanLocationQuery(raw: string): string {\n  if (!raw) return ''\n  return raw\n    .replace(/^(what('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|how('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|weather(\\s+in|\\s+for|\\s+at)?|get\\s+weather(\\s+in|\\s+for|\\s+at)?|forecast(\\s+in|\\s+for|\\s+at)?|check\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|acquire\\s+the\\s+weather\\s+skill)\\s*/i, '')\n    .replace(/[?!.]+$/, '')\n    .trim()\n}\n\nexport const MACRO_REGIONS: Record<string, { label: string; hubs: Array<{ name: string; region: string }> }> = {\n  africa: {\n    label: 'Africa',\n    hubs: [\n      { name: 'Cairo', region: 'Northern Africa' },\n      { name: 'Lagos', region: 'Western Africa' },\n      { name: 'Nairobi', region: 'Eastern Africa' },\n      { name: 'Johannesburg', region: 'Southern Africa' }\n    ]\n  },\n  europe: {\n    label: 'Europe',\n    hubs: [\n      { name: 'London', region: 'Western Europe' },\n      { name: 'Berlin', region: 'Central Europe' },\n      { name: 'Rome', region: 'Southern Europe' },\n      { name: 'Warsaw', region: 'Eastern Europe' }\n    ]\n  },\n  asia: {\n    label: 'Asia',\n    hubs: [\n      { name: 'Tokyo', region: 'East Asia' },\n      { name: 'Singapore', region: 'Southeast Asia' },\n      { name: 'Mumbai', region: 'South Asia' },\n      { name: 'Dubai', region: 'Western Asia' }\n    ]\n  },\n  'north america': {\n    label: 'North America',\n    hubs: [\n      { name: 'New York', region: 'Eastern US' },\n      { name: 'Chicago', region: 'Midwest US' },\n      { name: 'Los Angeles', region: 'Western US' },\n      { name: 'Toronto', region: 'Eastern Canada' }\n    ]\n  },\n  'south america': {\n    label: 'South America',\n    hubs: [\n      { name: 'Sao Paulo', region: 'Brazil' },\n      { name: 'Buenos Aires', region: 'Argentina' },\n      { name: 'Bogota', region: 'Colombia' },\n      { name: 'Santiago', region: 'Chile' }\n    ]\n  },\n  oceania: {\n    label: 'Oceania',\n    hubs: [\n      { name: 'Sydney', region: 'Eastern Australia' },\n      { name: 'Perth', region: 'Western Australia' },\n      { name: 'Auckland', region: 'New Zealand' }\n    ]\n  }\n}\n\nexport default async function run(ctx: OSContext) {\n  const { sh, log, args } = ctx\n\n  // 1. Argument Extraction & Normalization\n  let rawLocation = ''\n  if (typeof args === 'string') {\n    rawLocation = cleanLocationQuery(args)\n  } else if (args && typeof args === 'object') {\n    const candidate = args.location || args.city || args.input || args.prompt || ''\n    rawLocation = cleanLocationQuery(String(candidate))\n  }\n\n  const normalizedKey = rawLocation.toLowerCase().trim()\n\n  // 2. Planning: Check for Macro-Region / Continent Query\n  const macro = MACRO_REGIONS[normalizedKey]\n  if (macro) {\n    log(`🌍 \"${macro.label}\" is a continent spanning multiple climate zones. Querying regional meteorological hubs...`)\n\n    const reports: string[] = []\n    const results = await Promise.all(\n      macro.hubs.map(async (hub) => {\n        try {\n          const res = await sh(`curl -s --max-time 6 \"wttr.in/${encodeURIComponent(hub.name)}?format=%l:+%c+%t+(humidity:+%h,+wind:+%w)\"`)\n          if (res.exitCode === 0 && res.stdout.trim() && !res.stdout.includes('<!DOCTYPE') && !res.stdout.includes('Unknown location')) {\n            return `  • \\x1b[1m${hub.region} (${hub.name})\\x1b[0m: ${res.stdout.trim()}`\n          }\n        } catch {}\n        return `  • \\x1b[1m${hub.region} (${hub.name})\\x1b[0m: Service temporarily unavailable`\n      })\n    )\n\n    const header = `\\x1b[1;36m🌍 ${macro.label} Regional Weather Overview:\\x1b[0m`\n    const body = results.join('\\n')\n    const fullText = `${header}\\n${body}`\n\n    log('\\n' + fullText)\n    return {\n      success: true,\n      location: macro.label,\n      isMacroRegion: true,\n      text: fullText\n    }\n  }\n\n  // 3. Planning: Single Location or Local IP Weather Query\n  const locParam = rawLocation ? encodeURIComponent(rawLocation) : ''\n  const displayTarget = rawLocation || 'current location'\n  log(`🌤️ Fetching weather report for \"${displayTarget}\"...`)\n\n  // Try wttr.in format 3 for clean terminal summary\n  const res = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?format=%l:+%c+%t+(humidity:+%h,+wind:+%w)\"`)\n  if (res.exitCode === 0 && res.stdout.trim() && !res.stdout.includes('<!DOCTYPE') && !res.stdout.includes('Unknown location')) {\n    const output = res.stdout.trim()\n    log(`\\x1b[1;36m${output}\\x1b[0m`)\n    return {\n      success: true,\n      location: rawLocation || 'auto',\n      text: output\n    }\n  }\n\n  // Fallback to 1-day compact ASCII summary\n  const fallback = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?0\"`)\n  if (fallback.exitCode === 0 && fallback.stdout.trim() && !fallback.stdout.includes('<!DOCTYPE') && !fallback.stdout.includes('Unknown location')) {\n    log('\\n' + fallback.stdout)\n    return {\n      success: true,\n      location: rawLocation || 'auto',\n      text: fallback.stdout\n    }\n  }\n\n  throw new Error(`Weather service unavailable or unknown location \"${displayTarget}\".`)\n}\n",
+      "sourceCode": "export interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport function cleanLocationQuery(raw: string): string {\n  if (!raw) return ''\n  return raw\n    .replace(/^(what('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|how('s|\\s+is)\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|weather(\\s+in|\\s+for|\\s+at)?|get\\s+weather(\\s+in|\\s+for|\\s+at)?|forecast(\\s+in|\\s+for|\\s+at)?|check\\s+the\\s+weather(\\s+in|\\s+for|\\s+at)?|acquire\\s+the\\s+weather\\s+skill)\\s*/i, '')\n    .replace(/[?!.]+$/, '')\n    .trim()\n}\n\nexport const MACRO_REGIONS: Record<string, { label: string; hubs: Array<{ name: string; region: string }> }> = {\n  africa: {\n    label: 'Africa',\n    hubs: [\n      { name: 'Cairo', region: 'Northern Africa' },\n      { name: 'Lagos', region: 'Western Africa' },\n      { name: 'Nairobi', region: 'Eastern Africa' },\n      { name: 'Johannesburg', region: 'Southern Africa' }\n    ]\n  },\n  europe: {\n    label: 'Europe',\n    hubs: [\n      { name: 'London', region: 'Western Europe' },\n      { name: 'Berlin', region: 'Central Europe' },\n      { name: 'Rome', region: 'Southern Europe' },\n      { name: 'Warsaw', region: 'Eastern Europe' }\n    ]\n  },\n  asia: {\n    label: 'Asia',\n    hubs: [\n      { name: 'Tokyo', region: 'East Asia' },\n      { name: 'Singapore', region: 'Southeast Asia' },\n      { name: 'Mumbai', region: 'South Asia' },\n      { name: 'Dubai', region: 'Western Asia' }\n    ]\n  },\n  'north america': {\n    label: 'North America',\n    hubs: [\n      { name: 'New York', region: 'Eastern US' },\n      { name: 'Chicago', region: 'Midwest US' },\n      { name: 'Los Angeles', region: 'Western US' },\n      { name: 'Toronto', region: 'Eastern Canada' }\n    ]\n  },\n  'south america': {\n    label: 'South America',\n    hubs: [\n      { name: 'Sao Paulo', region: 'Brazil' },\n      { name: 'Buenos Aires', region: 'Argentina' },\n      { name: 'Bogota', region: 'Colombia' },\n      { name: 'Santiago', region: 'Chile' }\n    ]\n  },\n  oceania: {\n    label: 'Oceania',\n    hubs: [\n      { name: 'Sydney', region: 'Eastern Australia' },\n      { name: 'Perth', region: 'Western Australia' },\n      { name: 'Auckland', region: 'New Zealand' }\n    ]\n  }\n}\n\nexport default async function run(ctx: OSContext) {\n  const { sh, log, args } = ctx\n\n  // 1. Argument Extraction & Normalization\n  let rawLocation = ''\n  if (typeof args === 'string') {\n    rawLocation = cleanLocationQuery(args)\n  } else if (args && typeof args === 'object') {\n    const candidate = args.location || args.city || args.input || args.prompt || ''\n    rawLocation = cleanLocationQuery(String(candidate))\n  }\n\n  const normalizedKey = rawLocation.toLowerCase().trim()\n\n  // 2. Planning: Check for Macro-Region / Continent Query\n  const macro = MACRO_REGIONS[normalizedKey]\n  if (macro) {\n    log(`🌍 \"${macro.label}\" is a continent spanning multiple climate zones. Querying regional meteorological hubs...`)\n\n    const reports: string[] = []\n    const results = await Promise.all(\n      macro.hubs.map(async (hub) => {\n        try {\n          const res = await sh(`curl -s --max-time 6 \"wttr.in/${encodeURIComponent(hub.name)}?format=%l:+%c+%t+(humidity:+%h,+wind:+%w)\"`)\n          if (res.exitCode === 0 && res.stdout.trim() && !res.stdout.includes('<!DOCTYPE') && !res.stdout.includes('Unknown location')) {\n            return `  • \\x1b[1m${hub.region} (${hub.name})\\x1b[0m: ${res.stdout.trim()}`\n          }\n        } catch {}\n        return `  • \\x1b[1m${hub.region} (${hub.name})\\x1b[0m: Service temporarily unavailable`\n      })\n    )\n\n    const header = `\\x1b[1;36m🌍 ${macro.label} Regional Weather Overview:\\x1b[0m`\n    const body = results.join('\\n')\n    const fullText = `${header}\\n${body}`\n\n    console.log('\\n' + fullText)\n    return {\n      success: true,\n      location: macro.label,\n      isMacroRegion: true,\n      text: fullText\n    }\n  }\n\n  // 3. Planning: Single Location or Local IP Weather Query\n  const locParam = rawLocation ? encodeURIComponent(rawLocation) : ''\n  const displayTarget = rawLocation || 'current location'\n  log(`🌤️ Fetching weather report for \"${displayTarget}\"...`)\n\n  // Try wttr.in format 3 for clean terminal summary\n  const res = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?format=%l:+%c+%t+(humidity:+%h,+wind:+%w)\"`)\n  if (res.exitCode === 0 && res.stdout.trim() && !res.stdout.includes('<!DOCTYPE') && !res.stdout.includes('Unknown location')) {\n    const output = res.stdout.trim()\n    log(`\\x1b[1;36m${output}\\x1b[0m`)\n    return {\n      success: true,\n      location: rawLocation || 'auto',\n      text: output\n    }\n  }\n\n  // Fallback to 1-day compact ASCII summary\n  const fallback = await sh(`curl -s --max-time 6 \"wttr.in/${locParam}?0\"`)\n  if (fallback.exitCode === 0 && fallback.stdout.trim() && !fallback.stdout.includes('<!DOCTYPE') && !fallback.stdout.includes('Unknown location')) {\n    log('\\n' + fallback.stdout)\n    return {\n      success: true,\n      location: rawLocation || 'auto',\n      text: fallback.stdout\n    }\n  }\n\n  throw new Error(`Weather service unavailable or unknown location \"${displayTarget}\".`)\n}\n",
       "requirements": {
         "daemons": [],
         "binaries": [
           "curl"
         ]
       },
-      "sha256": "e61274362da46b6dfa1373d890a309621cec94e30a253c4a8b604049b09d84ac",
-      "sizeBytes": 9893
+      "inputs": {
+        "location": {
+          "type": "string",
+          "default": "",
+          "description": "City, country, or continent name (e.g. 'London', 'Tokyo', 'Africa', 'Europe'). Defaults to local IP location."
+        },
+        "format": {
+          "type": "string",
+          "default": "compact",
+          "description": "Output format: 'compact' (one-line summary) or 'full' (ASCII forecast card)"
+        }
+      },
+      "capabilities": {
+        "supportsContinents": true,
+        "supportsAirports": true,
+        "supportsCoordinates": true,
+        "fallbackStrategy": "regional-hubs-for-continents"
+      },
+      "sha256": "2f8ef119a9f7c1032843cb3ada9e753abd410bd5cfb052f3593d577b39ec2fff",
+      "sizeBytes": 9901
     },
     {
       "id": "skills/git-squash-feature",
@@ -247,6 +297,31 @@
         "binaries": [
           "bun"
         ]
+      },
+      "inputs": {
+        "name": {
+          "type": "string",
+          "description": "Unique kebab-case name of the skill to create",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "description": "Clear explanation of what capability the skill provides",
+          "required": true
+        },
+        "target": {
+          "type": "string",
+          "default": "universal",
+          "description": "Target runtime: universal, ai-cli, or aiwf"
+        },
+        "tags": {
+          "type": "array",
+          "default": [
+            "custom",
+            "automation"
+          ],
+          "description": "Search and discovery tags"
+        }
       },
       "sha256": "f950f2f3910b67a76e7c97cfdc7bcead5674879131e01e3af324848aef0df75b",
       "sizeBytes": 6182

@@ -106,7 +106,7 @@ export default async function run(ctx: OSContext) {
     const body = results.join('\n')
     const fullText = `${header}\n${body}`
 
-    log('\n' + fullText)
+    console.log('\n' + fullText)
     return {
       success: true,
       location: macro.label,

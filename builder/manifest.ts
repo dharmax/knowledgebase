@@ -32,6 +32,8 @@ export interface KnowledgeItemMeta {
     daemons?: string[];
     binaries?: string[];
   };
+  inputs?: Record<string, any>;
+  capabilities?: Record<string, any>;
   sha256: string;
   sizeBytes: number;
 }
@@ -164,6 +166,8 @@ function buildManifest(root: string): KnowledgeManifest {
           files: bundleFiles,
           sourceCode,
           requirements,
+          inputs: parsed.inputs || undefined,
+          capabilities: parsed.capabilities || undefined,
           sha256,
           sizeBytes: totalSize
         });
