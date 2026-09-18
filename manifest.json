@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-09-18T18:04:07.932Z",
+  "generatedAt": "2026-09-18T18:29:53.857Z",
   "repo": "dharmax/knowledgebase",
-  "totalItems": 10,
+  "totalItems": 11,
   "items": [
     {
       "id": "patterns/pubsub-event-routing",
@@ -129,11 +129,26 @@
         "sdxl",
         "stable-diffusion",
         "ai",
-        "media"
+        "media",
+        "picture",
+        "draw"
       ],
-      "path": "skills/generate-image-sd.json",
-      "sha256": "60a3b69972bfa523c243be90207c4c8244132975c0fb7e62b9fe492dc71c73f1",
-      "sizeBytes": 2016
+      "path": "skills/generate-image-sd",
+      "entrypoint": "run.ts",
+      "files": [
+        "skill.test.ts",
+        "run.ts",
+        "skill.json"
+      ],
+      "sourceCode": "export interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport default async function run(ctx: OSContext) {\n  const { env, log, args } = ctx\n  const host = env.SD_HOST || 'http://lotus:7860'\n\n  let fullInput = ''\n  if (typeof args === 'string') fullInput = args\n  else if (args && typeof args.input === 'string') fullInput = args.input\n  else if (args && typeof args.prompt === 'string') fullInput = args.prompt\n  else if (args && Array.isArray(args.positional)) fullInput = args.positional.join(' ')\n  else if (Array.isArray(args)) fullInput = args.join(' ')\n  fullInput = fullInput.trim()\n\n  // Extract file target if specified\n  const fileMatch =\n    fullInput.match(/(?:save(?:\\s+it)?\\s+as\\s+|into\\s+|to\\s+)([a-zA-Z0-9_.-]+\\.(?:png|jpg|jpeg))/i) ||\n    fullInput.match(/([a-zA-Z0-9_.-]+\\.(?:png|jpg|jpeg))/i)\n  const outFile = fileMatch ? fileMatch[1] : (args?.output || 'output.png')\n\n  // Clean prompt of directives\n  const cleanPrompt =\n    fullInput\n      .replace(/generate\\s+(an?\\s+)?(image|picture|pic|photo)\\s+of\\s+/i, '')\n      .replace(/(?:save(?:\\s+it)?\\s+as\\s+|into\\s+|to\\s+)[a-zA-Z0-9_.-]+\\.(?:png|jpg|jpeg)/i, '')\n      .trim() || 'a majestic cat, photorealistic, 8k, detailed'\n\n  log(`🎨 Generating image via ${host} [SDXL] for: \"${cleanPrompt}\"...`)\n\n  try {\n    const ctrl = new AbortController()\n    const timeout = setTimeout(() => ctrl.abort(), 90000)\n    const res = await fetch(`${host}/sdapi/v1/txt2img`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        prompt: cleanPrompt,\n        steps: 25,\n        width: 1024,\n        height: 1024\n      }),\n      signal: ctrl.signal\n    })\n    clearTimeout(timeout)\n\n    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)\n    const json = (await res.json()) as { images?: string[] }\n    if (!json.images || !json.images[0]) throw new Error('No image data returned from Stable Diffusion')\n\n    await Bun.write(outFile, Buffer.from(json.images[0], 'base64'))\n    log(`✔ Successfully saved generated image to: ${outFile}`)\n\n    const isKittyOrGhostty = Boolean(\n      process.env.KITTY_WINDOW_ID ||\n        (process.env.TERM || '').includes('kitty') ||\n        (process.env.TERM_PROGRAM || '').toLowerCase().includes('ghostty')\n    )\n    if (isKittyOrGhostty) {\n      const b64 = json.images[0]\n      const chunkSize = 4096\n      for (let i = 0; i < b64.length; i += chunkSize) {\n        const chunk = b64.slice(i, i + chunkSize)\n        const isLast = i + chunkSize >= b64.length\n        const m = isLast ? 0 : 1\n        const header = i === 0 ? 'a=T,f=100,t=d,' : ''\n        process.stdout.write(`\\x1b_G${header}m=${m};${chunk}\\x1b\\\\`)\n      }\n      process.stdout.write('\\n')\n    }\n\n    return { success: true, outFile, prompt: cleanPrompt }\n  } catch (err: any) {\n    log(`❌ Image generation failed: ${err.message}`)\n    throw err\n  }\n}\n",
+      "requirements": {
+        "daemons": [
+          "http://lotus:7860/sdapi/v1/sd-models"
+        ],
+        "binaries": []
+      },
+      "sha256": "b73a3c05aee0d7bc58e5f411a9c7d2f2749f6fbf979f091c263d0536c3cd10ba",
+      "sizeBytes": 5705
     },
     {
       "id": "skills/git-squash-feature",
@@ -169,6 +184,38 @@
       "path": "skills/posix-port-kill.json",
       "sha256": "5030c3370317546de110d4c62283b9deb87855ac4d525dd8ee11e7804dc9fe8f",
       "sizeBytes": 1214
+    },
+    {
+      "id": "skills/skill-creator",
+      "type": "skill",
+      "title": "Autonomous Skill Authoring & Packaging Meta-Skill",
+      "description": "Inspects host environment, audits local topology/services, scaffolds a standardized skill bundle (skill.json, run.ts, test.ts), runs a verification test, and registers it into the local AI runtime.",
+      "target": "universal",
+      "tags": [
+        "meta",
+        "skill",
+        "authoring",
+        "developer",
+        "generator",
+        "scaffold",
+        "jit"
+      ],
+      "path": "skills/skill-creator",
+      "entrypoint": "run.ts",
+      "files": [
+        "skill.test.ts",
+        "run.ts",
+        "skill.json"
+      ],
+      "sourceCode": "import fs from 'node:fs'\nimport path from 'node:path'\nimport os from 'node:os'\n\nexport interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport default async function run(ctx: OSContext) {\n  const { sh, log, args } = ctx\n\n  let inputName = ''\n  let inputDesc = ''\n  let tags: string[] = ['custom', 'skill']\n\n  if (typeof args === 'string') {\n    const raw = args.replace(/^create\\s+skill\\s+/i, '').trim()\n    inputName = raw.split(/\\s+/)[0] || 'custom-skill'\n    inputDesc = raw || 'Custom synthesized operational skill'\n  } else if (args && typeof args === 'object') {\n    inputName = args.name || args.input || 'custom-skill'\n    inputDesc = args.description || args.prompt || `Skill for ${inputName}`\n    if (Array.isArray(args.tags)) tags = args.tags\n  }\n\n  const safeName = inputName.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/^-+|-+$/g, '') || 'custom-skill'\n  log(`🛠️ Scaffolding skill bundle for: \"${safeName}\"...`)\n\n  // Target directory inside user's local skills cache\n  const targetDir = path.join(os.homedir(), '.config', 'ai-cli', 'skills', safeName)\n  fs.mkdirSync(targetDir, { recursive: true })\n\n  // 1. Generate skill.json\n  const meta = {\n    id: `skills/${safeName}`,\n    name: safeName,\n    title: safeName.replace(/-/g, ' ').replace(/\\b\\w/g, (l) => l.toUpperCase()),\n    description: inputDesc,\n    target: 'universal',\n    tags: Array.from(new Set([safeName, ...tags])),\n    safeToAutomate: true,\n    requirements: {\n      daemons: [],\n      binaries: []\n    },\n    inputs: {\n      query: { type: 'string', description: 'Input parameter for the skill' }\n    },\n    entrypoint: 'run.ts'\n  }\n\n  fs.writeFileSync(path.join(targetDir, 'skill.json'), JSON.stringify(meta, null, 2) + '\\n', 'utf8')\n  log(`  ➜ Created skill.json`)\n\n  // 2. Generate run.ts\n  const runCode = `export interface OSContext {\n  sh: (cmd: string, opts?: any) => Promise<{ stdout: string; stderr: string; exitCode: number }>\n  cwd: string\n  env: Record<string, string>\n  log: (msg: string) => void\n  args: any\n}\n\nexport default async function run(ctx: OSContext) {\n  const { log, args, sh } = ctx\n  log(\\`Running skill \"${safeName}\" with args: \\${JSON.stringify(args)}\\`)\n  return { success: true, skill: \"${safeName}\", timestamp: new Date().toISOString() }\n}\n`\n  fs.writeFileSync(path.join(targetDir, 'run.ts'), runCode, 'utf8')\n  log(`  ➜ Created run.ts`)\n\n  // 3. Generate skill.test.ts\n  const testCode = `import { describe, it, expect } from 'bun:test'\nimport run from './run.ts'\n\ndescribe('Skill: ${safeName}', () => {\n  it('executes successfully and returns structured output', async () => {\n    const logs: string[] = []\n    const ctx = {\n      sh: async () => ({ stdout: '', stderr: '', exitCode: 0 }),\n      cwd: process.cwd(),\n      env: {},\n      log: (msg: string) => logs.push(msg),\n      args: { test: true }\n    }\n    const res = await run(ctx)\n    expect(res.success).toBe(true)\n    expect(res.skill).toBe('${safeName}')\n  })\n})\n`\n  fs.writeFileSync(path.join(targetDir, 'skill.test.ts'), testCode, 'utf8')\n  log(`  ➜ Created skill.test.ts`)\n\n  // 4. Run verification test suite\n  log(`🧪 Running deterministic verification test...`)\n  const testRes = await sh(`bun test \"${path.join(targetDir, 'skill.test.ts')}\"`)\n  if (testRes.exitCode !== 0) {\n    log(`⚠️ Verification test failed:\\n${testRes.stderr || testRes.stdout}`)\n    throw new Error(`Generated skill test failed verification: ${testRes.stderr || testRes.stdout}`)\n  }\n  log(`✔ Skill \"${safeName}\" verified and tested successfully!`)\n\n  return {\n    success: true,\n    skillId: meta.id,\n    path: targetDir,\n    meta,\n    files: ['skill.json', 'run.ts', 'test.ts']\n  }\n}\n",
+      "requirements": {
+        "daemons": [],
+        "binaries": [
+          "bun"
+        ]
+      },
+      "sha256": "f950f2f3910b67a76e7c97cfdc7bcead5674879131e01e3af324848aef0df75b",
+      "sizeBytes": 6182
     }
   ]
 }

@@ -25,6 +25,13 @@ export interface KnowledgeItemMeta {
   target: 'universal' | 'ai-cli' | 'aiwf';
   tags: string[];
   path: string;
+  entrypoint?: string;
+  files?: string[];
+  sourceCode?: string;
+  requirements?: {
+    daemons?: string[];
+    binaries?: string[];
+  };
   sha256: string;
   sizeBytes: number;
 }
@@ -103,10 +110,69 @@ function buildManifest(root: string): KnowledgeManifest {
   const skillsDir = path.join(root, 'skills');
   if (fs.existsSync(skillsDir)) {
     for (const f of fs.readdirSync(skillsDir)) {
-      if (!f.endsWith('.json') && !f.endsWith('.yaml')) continue;
       const fullPath = path.join(skillsDir, f);
-      const content = fs.readFileSync(fullPath, 'utf8');
       const stat = fs.statSync(fullPath);
+
+      // A: Directory Skill Bundle (Modern)
+      if (stat.isDirectory()) {
+        const skillJsonPath = path.join(fullPath, 'skill.json');
+        if (!fs.existsSync(skillJsonPath)) continue;
+
+        const skillJsonContent = fs.readFileSync(skillJsonPath, 'utf8');
+        let parsed: any = {};
+        try {
+          parsed = JSON.parse(skillJsonContent);
+        } catch {
+          continue;
+        }
+
+        const baseName = f;
+        const id = parsed.id || `skills/${baseName}`;
+        const title = parsed.title || baseName.replace(/-/g, ' ');
+        const description = parsed.description || `Skill bundle for ${baseName}`;
+        const target: 'universal' | 'ai-cli' | 'aiwf' = parsed.target || 'universal';
+        const tags = parsed.tags || [baseName, 'skill'];
+        const requirements = parsed.requirements || undefined;
+        const entrypoint = parsed.entrypoint || 'run.ts';
+
+        const runTsPath = path.join(fullPath, entrypoint);
+        let sourceCode: string | undefined = undefined;
+        if (fs.existsSync(runTsPath)) {
+          sourceCode = fs.readFileSync(runTsPath, 'utf8');
+        }
+
+        const bundleFiles = fs.readdirSync(fullPath).filter((x) => !x.startsWith('.'));
+        let totalSize = 0;
+        for (const file of bundleFiles) {
+          totalSize += fs.statSync(path.join(fullPath, file)).size;
+        }
+
+        const sha256 = computeHash({
+          meta: parsed,
+          sourceCode: sourceCode ? sourceCode.replace(/\r\n/g, '\n').trim() : ''
+        });
+
+        items.push({
+          id,
+          type: 'skill',
+          title,
+          description,
+          target,
+          tags,
+          path: `skills/${f}`,
+          entrypoint,
+          files: bundleFiles,
+          sourceCode,
+          requirements,
+          sha256,
+          sizeBytes: totalSize
+        });
+        continue;
+      }
+
+      // B: Legacy Single-File Skill
+      if (!f.endsWith('.json') && !f.endsWith('.yaml')) continue;
+      const content = fs.readFileSync(fullPath, 'utf8');
       const baseName = f.replace(/\.[^.]+$/, '');
       const id = `skills/${baseName}`;
 

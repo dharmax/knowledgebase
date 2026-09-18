@@ -1,0 +1,46 @@
+{
+  "id": "skills/generate-image-sd",
+  "name": "generate-image-sd",
+  "title": "Local Stable Diffusion Image Generation",
+  "description": "Generate high-resolution AI images via local Stable Diffusion WebUI API (SDXL on lotus:7860).",
+  "target": "universal",
+  "tags": ["image", "generation", "sdxl", "stable-diffusion", "ai", "media", "picture", "draw"],
+  "safeToAutomate": true,
+  "requirements": {
+    "daemons": ["http://lotus:7860/sdapi/v1/sd-models"],
+    "binaries": []
+  },
+  "inputs": {
+    "prompt": {
+      "type": "string",
+      "description": "Visual text description of the image to generate",
+      "required": true
+    },
+    "output": {
+      "type": "string",
+      "default": "output.png",
+      "description": "Destination file path for the generated image"
+    },
+    "host": {
+      "type": "string",
+      "default": "http://lotus:7860",
+      "description": "Stable Diffusion WebUI API host"
+    },
+    "width": {
+      "type": "number",
+      "default": 1024,
+      "description": "Image width in pixels"
+    },
+    "height": {
+      "type": "number",
+      "default": 1024,
+      "description": "Image height in pixels"
+    },
+    "steps": {
+      "type": "number",
+      "default": 25,
+      "description": "Sampling steps"
+    }
+  },
+  "entrypoint": "run.ts"
+}

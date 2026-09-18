@@ -1,0 +1,36 @@
+{
+  "id": "skills/skill-creator",
+  "name": "skill-creator",
+  "title": "Autonomous Skill Authoring & Packaging Meta-Skill",
+  "description": "Inspects host environment, audits local topology/services, scaffolds a standardized skill bundle (skill.json, run.ts, test.ts), runs a verification test, and registers it into the local AI runtime.",
+  "target": "universal",
+  "tags": ["meta", "skill", "authoring", "developer", "generator", "scaffold", "jit"],
+  "safeToAutomate": true,
+  "requirements": {
+    "daemons": [],
+    "binaries": ["bun"]
+  },
+  "inputs": {
+    "name": {
+      "type": "string",
+      "description": "Unique kebab-case name of the skill to create",
+      "required": true
+    },
+    "description": {
+      "type": "string",
+      "description": "Clear explanation of what capability the skill provides",
+      "required": true
+    },
+    "target": {
+      "type": "string",
+      "default": "universal",
+      "description": "Target runtime: universal, ai-cli, or aiwf"
+    },
+    "tags": {
+      "type": "array",
+      "default": ["custom", "automation"],
+      "description": "Search and discovery tags"
+    }
+  },
+  "entrypoint": "run.ts"
+}
