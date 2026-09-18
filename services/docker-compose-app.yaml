@@ -1,0 +1,33 @@
+# Docker Compose Application Stack
+name: docker-compose-app
+title: Modern Full-Stack Docker Compose Harness
+description: Lean compose configuration for web app with PostgreSQL and Redis caching.
+target: universal
+tags: [docker, compose, postgres, redis, fullstack]
+files:
+  docker-compose.yml: |
+    services:
+      postgres:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        environment:
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: devpassword
+          POSTGRES_DB: app
+        ports:
+          - "5432:5432"
+        volumes:
+          - pgdata:/var/lib/postgresql/data
+
+      redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        ports:
+          - "6379:6379"
+
+    volumes:
+      pgdata:
+commands:
+  up: docker compose up -d
+  down: docker compose down
+  logs: docker compose logs -f

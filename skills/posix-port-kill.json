@@ -1,0 +1,34 @@
+{
+  "id": "skills/posix-port-kill",
+  "title": "Safe POSIX Port Isolation & Process Termination",
+  "description": "Locate process occupying a network port via lsof/ss, identify owner/binary, and perform safe progressive SIGTERM/SIGKILL termination.",
+  "target": "ai-cli",
+  "tags": ["port", "process", "kill", "network", "linux", "posix"],
+  "safeToAutomate": false,
+  "inputs": {
+    "port": {
+      "type": "number",
+      "description": "Port number to liberate (e.g. 3000, 8080)"
+    }
+  },
+  "procedure": [
+    {
+      "step": 1,
+      "name": "identify",
+      "command": "ss -tulpn '( sport = :${port} )' | awk 'NR>1 {print $NF}' | sed -E 's/.*pid=([0-9]+).*/\\1/'",
+      "purpose": "Extract the exact PID listening on the given port"
+    },
+    {
+      "step": 2,
+      "name": "inspect",
+      "command": "ps -p ${PID} -o pid,user,comm,args",
+      "purpose": "Verify process command line and user to prevent accidental system service kills"
+    },
+    {
+      "step": 3,
+      "name": "terminate",
+      "command": "kill -15 ${PID} && sleep 1 && kill -0 ${PID} 2>/dev/null && kill -9 ${PID} || true",
+      "purpose": "Attempt graceful SIGTERM first, follow with SIGKILL if still hanging"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# Systemd Service Recipe: Ollama LLM Engine
+name: systemd-ollama
+title: Ollama Local LLM Systemd Service
+description: Hardened Linux systemd service unit for managing Ollama with GPU acceleration and remote listening.
+target: ai-cli
+tags: [ollama, systemd, llm, linux, gpu]
+prerequisites:
+  - ollama binary installed in /usr/local/bin/ollama or /usr/bin/ollama
+  - Dedicated user 'ollama' or standard system user
+files:
+  /etc/systemd/system/ollama.service: |
+    [Unit]
+    Description=Ollama Service
+    After=network-online.target
+
+    [Service]
+    ExecStart=/usr/bin/ollama serve
+    User=ollama
+    Group=ollama
+    Restart=always
+    RestartSec=3
+    Environment="PATH=$PATH"
+    Environment="OLLAMA_HOST=0.0.0.0:11434"
+    Environment="OLLAMA_KEEP_ALIVE=24h"
+
+    [Install]
+    WantedBy=default.target
+commands:
+  reload: sudo systemctl daemon-reload
+  enable: sudo systemctl enable --now ollama
+  status: sudo systemctl status ollama
+  logs: journalctl -u ollama -e --no-pager -n 50

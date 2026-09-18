@@ -1,0 +1,28 @@
+{
+  "id": "skills/bun-test-matrix",
+  "title": "Bun Test Suite Execution & Failure Distillation",
+  "description": "Execute targeted test runs using Bun test runner with bail support and compact error extraction.",
+  "target": "aiwf",
+  "tags": ["bun", "test", "testing", "typescript", "quality"],
+  "safeToAutomate": true,
+  "inputs": {
+    "testPath": {
+      "type": "string",
+      "default": "tests/",
+      "description": "Path to test directory or specific test file"
+    },
+    "bail": {
+      "type": "boolean",
+      "default": true,
+      "description": "Stop execution immediately on first failure"
+    }
+  },
+  "procedure": [
+    {
+      "step": 1,
+      "name": "run_tests",
+      "command": "bun test ${testPath} ${bail ? '--bail' : ''}",
+      "purpose": "Run native Bun test harness"
+    }
+  ]
+}

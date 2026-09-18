@@ -1,0 +1,22 @@
+# Caddy Reverse Proxy Recipe
+name: caddy-reverse-proxy
+title: Caddy HTTPS Reverse Proxy
+description: Production-grade Caddy reverse proxy recipe with automatic local TLS and web sockets.
+target: ai-cli
+tags: [caddy, proxy, https, tls, networking]
+prerequisites:
+  - caddy installed via package manager or static binary
+files:
+  /etc/caddy/Caddyfile: |
+    api.local {
+      tls internal
+      reverse_proxy localhost:3000
+    }
+    llm.local {
+      tls internal
+      reverse_proxy localhost:11434
+    }
+commands:
+  validate: caddy validate --config /etc/caddy/Caddyfile
+  reload: sudo systemctl reload caddy
+  status: sudo systemctl status caddy

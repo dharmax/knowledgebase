@@ -1,0 +1,39 @@
+{
+  "id": "skills/git-squash-feature",
+  "title": "Git Feature Branch Squash & Linear History",
+  "description": "Squash all commits on a feature branch against the base branch into a single clean conventional commit without detached HEAD states.",
+  "target": "universal",
+  "tags": ["git", "rebase", "squash", "vcs", "clean-history"],
+  "safeToAutomate": false,
+  "inputs": {
+    "baseBranch": {
+      "type": "string",
+      "default": "master",
+      "description": "Target upstream branch (e.g. master, main)"
+    },
+    "commitMessage": {
+      "type": "string",
+      "description": "Conventional commit message for squashed commit"
+    }
+  },
+  "procedure": [
+    {
+      "step": 1,
+      "name": "verify_clean",
+      "command": "git diff-index --quiet HEAD --",
+      "purpose": "Ensure working tree has no unstaged changes before reset"
+    },
+    {
+      "step": 2,
+      "name": "soft_reset",
+      "command": "git reset --soft $(git merge-base HEAD ${baseBranch})",
+      "purpose": "Rewind branch pointer to divergence point while preserving all changes staged in index"
+    },
+    {
+      "step": 3,
+      "name": "commit",
+      "command": "git commit -m \"${commitMessage}\"",
+      "purpose": "Create single atomic commit summarizing feature branch"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-09-18T17:24:45.364Z",
+  "repo": "dharmax/knowledgebase",
+  "totalItems": 9,
+  "items": [
+    {
+      "id": "patterns/pubsub-event-routing",
+      "type": "pattern",
+      "title": "Decoupled Actor Communication via PubSub",
+      "description": "Universal pattern for event-driven coordination between autonomous agents, CLI wrappers, and UI layers using @dharmax/pubsub.",
+      "target": "universal",
+      "tags": [
+        "pubsub",
+        "events",
+        "architecture",
+        "clean-code",
+        "decoupling"
+      ],
+      "path": "patterns/pubsub-event-routing.md",
+      "sha256": "9734a217399474c1099d0dea97de5a5c2917c10da2e8357635a46c6ca1573f29",
+      "sizeBytes": 1254
+    },
+    {
+      "id": "patterns/semantika-ontology-nodes",
+      "type": "pattern",
+      "title": "Semantika AST+ Semantic Ontology Design",
+      "description": "Rules for defining typed graph entities, bidirectional predicates, and localId resolution with SQLite persistence.",
+      "target": "aiwf",
+      "tags": [
+        "semantika",
+        "graph",
+        "ontology",
+        "sqlite",
+        "ast"
+      ],
+      "path": "patterns/semantika-ontology-nodes.md",
+      "sha256": "d49435c2dbe0272951be695eb7f59d630ef496b3a02f7378cd3b62b831116efd",
+      "sizeBytes": 1273
+    },
+    {
+      "id": "patterns/service-adapter-io",
+      "type": "pattern",
+      "title": "Service Adapter Pattern for IO and External APIs",
+      "description": "Standardized adapter boundary isolating network, filesystem, and external AI providers behind clean, mockable interfaces.",
+      "target": "universal",
+      "tags": [
+        "architecture",
+        "service-adapter",
+        "clean-code",
+        "testing",
+        "io"
+      ],
+      "path": "patterns/service-adapter-io.md",
+      "sha256": "f97982c8c506352a3269fc5e88372cbbccb2c2bab49f9ffc4ba12333769c5f63",
+      "sizeBytes": 1568
+    },
+    {
+      "id": "services/caddy-reverse-proxy",
+      "type": "service",
+      "title": "caddy reverse proxy",
+      "description": "Service recipe for caddy-reverse-proxy",
+      "target": "ai-cli",
+      "tags": [
+        "caddy-reverse-proxy",
+        "service",
+        "linux"
+      ],
+      "path": "services/caddy-reverse-proxy.yaml",
+      "sha256": "459d117626973619c3c409b34db2cd3c95e6b32d6ffa53ed743b1381582e8eaf",
+      "sizeBytes": 648
+    },
+    {
+      "id": "services/docker-compose-app",
+      "type": "service",
+      "title": "docker compose app",
+      "description": "Service recipe for docker-compose-app",
+      "target": "ai-cli",
+      "tags": [
+        "docker-compose-app",
+        "service",
+        "linux"
+      ],
+      "path": "services/docker-compose-app.yaml",
+      "sha256": "9160834f7bf56046bb62cd900e108541b7377cfcc0a9f859adf3f797f9624149",
+      "sizeBytes": 849
+    },
+    {
+      "id": "services/systemd-ollama",
+      "type": "service",
+      "title": "systemd ollama",
+      "description": "Service recipe for systemd-ollama",
+      "target": "ai-cli",
+      "tags": [
+        "systemd-ollama",
+        "service",
+        "linux"
+      ],
+      "path": "services/systemd-ollama.yaml",
+      "sha256": "bf867886bf5734afa3ededcaee6b11ee200f22efbcd237ac3a5f16cdee354e29",
+      "sizeBytes": 992
+    },
+    {
+      "id": "skills/bun-test-matrix",
+      "type": "skill",
+      "title": "Bun Test Suite Execution & Failure Distillation",
+      "description": "Execute targeted test runs using Bun test runner with bail support and compact error extraction.",
+      "target": "aiwf",
+      "tags": [
+        "bun",
+        "test",
+        "testing",
+        "typescript",
+        "quality"
+      ],
+      "path": "skills/bun-test-matrix.json",
+      "sha256": "b695d1f142f3c48dfc632bc39470e5688301b1dc45be6dbeaf6344313b854f55",
+      "sizeBytes": 813
+    },
+    {
+      "id": "skills/git-squash-feature",
+      "type": "skill",
+      "title": "Git Feature Branch Squash & Linear History",
+      "description": "Squash all commits on a feature branch against the base branch into a single clean conventional commit without detached HEAD states.",
+      "target": "universal",
+      "tags": [
+        "git",
+        "rebase",
+        "squash",
+        "vcs",
+        "clean-history"
+      ],
+      "path": "skills/git-squash-feature.json",
+      "sha256": "b553ff7c18b292f0264b5b80bffc3a130093bdce30ec9fb9710ffee5f1064674",
+      "sizeBytes": 1281
+    },
+    {
+      "id": "skills/posix-port-kill",
+      "type": "skill",
+      "title": "Safe POSIX Port Isolation & Process Termination",
+      "description": "Locate process occupying a network port via lsof/ss, identify owner/binary, and perform safe progressive SIGTERM/SIGKILL termination.",
+      "target": "ai-cli",
+      "tags": [
+        "port",
+        "process",
+        "kill",
+        "network",
+        "linux",
+        "posix"
+      ],
+      "path": "skills/posix-port-kill.json",
+      "sha256": "5030c3370317546de110d4c62283b9deb87855ac4d525dd8ee11e7804dc9fe8f",
+      "sizeBytes": 1214
+    }
+  ]
+}

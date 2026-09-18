@@ -1,0 +1,12 @@
+{
+  "name": "knowledgebase",
+  "version": "1.0.0",
+  "description": "Content-addressable skill, service, and pattern registry for ai-workflow and ai-cli",
+  "scripts": {
+    "build": "bun run builder/manifest.ts ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "private": true
+}
