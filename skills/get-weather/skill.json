@@ -2,9 +2,9 @@
   "id": "skills/get-weather",
   "name": "get-weather",
   "title": "Real-Time Terminal Weather Forecast",
-  "description": "Fetches current weather conditions and forecast for any city, country, or local IP location using wttr.in with clean ANSI styling.",
+  "description": "Fetches current conditions and meteorological reports for cities, countries, or macro-continental regions using wttr.in.",
   "target": "universal",
-  "tags": ["weather", "forecast", "climate", "temperature", "meteorology", "wttr", "rain", "sun"],
+  "tags": ["weather", "forecast", "climate", "temperature", "meteorology", "wttr", "rain", "sun", "regions"],
   "safeToAutomate": true,
   "requirements": {
     "daemons": [],
@@ -14,13 +14,19 @@
     "location": {
       "type": "string",
       "default": "",
-      "description": "City or location name (e.g. 'London', 'Paris', 'Tokyo'). Defaults to local IP location."
+      "description": "City, country, or continent name (e.g. 'London', 'Tokyo', 'Africa', 'Europe'). Defaults to local IP location."
     },
     "format": {
       "type": "string",
       "default": "compact",
-      "description": "Weather format: 'compact' (one-line summary) or 'full' (forecast grid)"
+      "description": "Output format: 'compact' (one-line summary) or 'full' (ASCII forecast card)"
     }
+  },
+  "capabilities": {
+    "supportsContinents": true,
+    "supportsAirports": true,
+    "supportsCoordinates": true,
+    "fallbackStrategy": "regional-hubs-for-continents"
   },
   "entrypoint": "run.ts"
 }
