@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "image-generation",
+  "name": "AI Image Generation",
+  "description": "Create or edit images from natural-language requests using an available image-generation capability.",
+  "keys": {
+    "primary": [
+      "media.image"
+    ],
+    "secondary": [
+      "generate",
+      "render",
+      "draw",
+      "illustrate",
+      "picture",
+      "photo",
+      "edit-image",
+      "image-generation"
+    ]
+  },
+  "tools": [
+    {
+      "name": "generate_image",
+      "description": "Generate a new image or edit an existing image from a natural-language instruction.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "What to create or change."
+          },
+          "source": {
+            "type": "string",
+            "description": "Optional host-resolved reference to an existing image to edit."
+          }
+        },
+        "required": [
+          "prompt"
+        ]
+      }
+    }
+  ]
+}
